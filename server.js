@@ -48,7 +48,7 @@ async function initDB() {
 // Call initDB once server starts
 initDB();
 
-// 🔹 Add Reaction / Like
+// 🔹 Add Reaction / Like (PostgreSQL version)
 app.post("/react", async (req, res) => {
     try {
         const { postId, email, reaction } = req.body;
@@ -57,30 +57,28 @@ app.post("/react", async (req, res) => {
             return res.status(400).json({ message: "Post ID, email and reaction are required!" });
         }
 
-        // Assuming you have a Post model
-        const post = await Post.findById(postId);
-        if (!post) {
-            return res.status(404).json({ message: "Post not found!" });
-        }
+        // Insert reaction, avoid duplicates
+        const query = `
+            INSERT INTO likes (post_id, email, reaction)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (post_id, email)
+            DO NOTHING
+            RETURNING *;
+        `;
 
-        // Check if this user already reacted
-        const alreadyReacted = post.reactions.some(r => r.email === email);
+        const result = await interactDB.query(query, [postId, email, reaction]);
 
-        if (alreadyReacted) {
+        if (result.rows.length === 0) {
             return res.status(400).json({ message: "You have already reacted to this post!" });
         }
 
-        // Add new reaction
-        post.reactions.push({ email, reaction });
-        await post.save();
-
         res.status(200).json({ message: "Reaction added successfully!" });
+
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: "Server error" });
+        console.error("Server error:", err.message);
+        res.status(500).json({ message: "Server error", error: err.message });
     }
 });
-
 
 // 🔹 Get reaction + comment quantity for a post
 app.get("/QuanOfReact", async (req, res) => {
