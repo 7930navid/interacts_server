@@ -193,6 +193,38 @@ app.get("/comments/:postId", async (req, res) => {
   }
 });
 
+
+// 🔹 Delete a comment (only by owner)
+app.delete("/comment/:email/:commentId", async (req, res) => {
+  try {
+    const { email, commentId } = req.params;
+
+    if (!email || !commentId) {
+      return res.status(400).json({ message: "Email and commentId are required" });
+    }
+
+    // Check if comment exists and belongs to this user
+    const checkResult = await interactDB.query(
+      "SELECT * FROM comments WHERE id=$1 AND email=$2",
+      [commentId, email]
+    );
+
+    if (checkResult.rows.length === 0) {
+      return res.status(403).json({ message: "You are not allowed to delete this comment" });
+    }
+
+    // Delete the comment
+    await interactDB.query("DELETE FROM comments WHERE id=$1 AND email=$2", [commentId, email]);
+
+    res.status(200).json({ message: "Comment deleted successfully ✅" });
+
+  } catch (err) {
+    console.error("Error deleting comment:", err.message);
+    res.status(500).json({ message: "Server error", error: err.message });
+  }
+});
+
+
 // 🔹 Server check
 app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
 
