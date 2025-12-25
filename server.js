@@ -25,7 +25,7 @@ const interactDB = new Pool({
 async function initDB() {
   try {
     // Likes table
-    await interactDB.query(`DROP TABLE IF EXISTS likes`);
+    
     await interactDB.query(`
       CREATE TABLE likes (
           id SERIAL PRIMARY KEY,
