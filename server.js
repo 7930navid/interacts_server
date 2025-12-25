@@ -15,46 +15,57 @@ app.use(
   })
 );
 
-// 🔹 PostgreSQL connection
+// DB Setup:-
+
 const interactDB = new Pool({
   connectionString: process.env.INTERACT_DB_URL,
   ssl: { rejectUnauthorized: false },
 });
 
-// 🔹 Initialize tables
 async function initDB() {
   try {
+    // Drop tables safely
+    await interactDB.query(`DROP TABLE IF EXISTS likes`);
+    await interactDB.query(`DROP TABLE IF EXISTS comments`);
+
+    // Create likes table
     await interactDB.query(`
-      DROP TABLE IF EXISTS likes (
-          id SERIAL PRIMARY KEY,
-          post_id INT NOT NULL,
-          email TEXT NOT NULL,
-          reaction TEXT NOT NULL,
-          UNIQUE(post_id, email)
+      CREATE TABLE IF NOT EXISTS likes (
+        id SERIAL PRIMARY KEY,
+        post_id INT NOT NULL,
+        email TEXT NOT NULL,
+        reaction TEXT NOT NULL,
+        UNIQUE(post_id, email)
       )
     `);
 
+    // Create comments table
     await interactDB.query(`
-      DROP TABLE IF EXISTS comments (
-          id SERIAL PRIMARY KEY,
-          post_id INT NOT NULL,
-          email TEXT NOT NULL,
-          username TEXT NOT NULL,
-          avatar TEXT,
-          comment TEXT NOT NULL,
-          created_at TIMESTAMP DEFAULT NOW()
+      CREATE TABLE IF NOT EXISTS comments (
+        id SERIAL PRIMARY KEY,
+        post_id INT NOT NULL,
+        email TEXT NOT NULL,
+        username TEXT NOT NULL,
+        avatar TEXT,
+        comment TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT NOW()
       )
     `);
 
-    console.log("✅ Tables ensured!");
+    console.log("✅ Tables ensured successfully!");
   } catch (err) {
     console.error("❌ DB init error:", err.message);
+
+    // Optional: stop process if tables can't be created
+    // process.exit(1);
   }
 }
 
+// Initialize
+initDB().catch(err => {
+  console.error("Unhandled DB init error:", err.message);
+});
 
-// Call initDB
-initDB();
 
 // 🔹 Add Reaction / Like
 app.post("/react", async (req, res) => {
