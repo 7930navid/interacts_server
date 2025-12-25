@@ -224,6 +224,53 @@ app.delete("/comment/:email/:commentId", async (req, res) => {
   }
 });
 
+// 🔹 Update comment (only owner can edit)
+app.put("/comment/:email/:comId", async (req, res) => {
+  try {
+    const { email, comId } = req.params;
+    const { newComment } = req.body;
+
+    if (!email || !comId) {
+      return res.status(400).json({ message: "Email and commentId are required" });
+    }
+
+    if (!newComment || newComment.trim() === "") {
+      return res.status(400).json({ message: "Comment text is required" });
+    }
+
+    // 🔎 Check ownership
+    const check = await interactDB.query(
+      `SELECT id FROM comments WHERE id = $1 AND email = $2`,
+      [comId, email]
+    );
+
+    if (check.rowCount === 0) {
+      return res.status(403).json({
+        message: "You are not allowed to edit this comment"
+      });
+    }
+
+    // ✏️ Update comment
+    await interactDB.query(
+      `UPDATE comments 
+       SET comment = $1, updated_at = NOW()
+       WHERE id = $2`,
+      [newComment, comId]
+    );
+
+    res.status(200).json({
+      message: "Comment updated successfully"
+    });
+
+  } catch (err) {
+    console.error("Error updating comment:", err.message);
+    res.status(500).json({
+      message: "Server error",
+      error: err.message
+    });
+  }
+});
+
 
 // 🔹 Server check
 app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
