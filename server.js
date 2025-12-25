@@ -38,13 +38,16 @@ async function initDB() {
 
     // Comments table
     await interactDB.query(`
-      CREATE TABLE IF NOT EXISTS comments (
-          id SERIAL PRIMARY KEY,
-          post_id INT NOT NULL,
-          email TEXT NOT NULL,
-          comment TEXT NOT NULL,
-          created_at TIMESTAMP DEFAULT NOW()
-      )
+CREATE TABLE IF NOT EXISTS comments (
+    id SERIAL PRIMARY KEY,
+    post_id INT NOT NULL,
+    email TEXT NOT NULL,
+    username TEXT NOT NULL,
+    avatar TEXT,
+    comment TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT NOW()
+)
+
     `);
 
     console.log("✅ Tables initialized successfully!");
