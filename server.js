@@ -253,7 +253,7 @@ app.put("/comment/:email/:comId", async (req, res) => {
     // ✏️ Update comment
     await interactDB.query(
       `UPDATE comments 
-       SET comment = $1, updated_at = NOW()
+       SET comment = $1,
        WHERE id = $2`,
       [newComment, comId]
     );
