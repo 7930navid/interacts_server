@@ -24,9 +24,6 @@ const interactDB = new Pool({
 
 async function initDB() {
   try {
-    // Drop tables safely
-    await interactDB.query(`DROP TABLE IF EXISTS likes`);
-    await interactDB.query(`DROP TABLE IF EXISTS comments`);
 
     // Create likes table
     await interactDB.query(`
