@@ -175,7 +175,7 @@ app.get("/comments/:postId", async (req, res) => {
     }
 
     const result = await interactDB.query(
-      `SELECT id, username, avatar, comment, created_at
+      `SELECT id, username, email, avatar, comment, created_at
        FROM comments
        WHERE post_id = $1
        ORDER BY created_at DESC`,
