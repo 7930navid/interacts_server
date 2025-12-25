@@ -135,17 +135,20 @@ app.post("/comment", async (req, res) => {
 });
 
 // 🔹 Get reaction + comment count for a post
-app.get("/QuanOfReact", async (req, res) => {
-  try {
-    const { postId } = req.query;
 
+
+app.get("/api/counts/:postId", async (req, res) => {
+  try {
+    const { postId } = req.params;
     if (!postId) return res.status(400).json({ message: "postId is required" });
 
+    // Likes count
     const likeResult = await interactDB.query(
       "SELECT COUNT(*) AS likes FROM likes WHERE post_id=$1",
       [postId]
     );
 
+    // Comments count
     const commentResult = await interactDB.query(
       "SELECT COUNT(*) AS comments FROM comments WHERE post_id=$1",
       [postId]
@@ -153,31 +156,15 @@ app.get("/QuanOfReact", async (req, res) => {
 
     res.json({
       likes: Number(likeResult.rows[0].likes),
-      comments: Number(commentResult.rows[0].comments)
+      comments: Number(commentResult.rows[0].comments),
     });
 
   } catch (err) {
-    console.error("Error fetching react/comment quantity:", err.message);
+    console.error("Error fetching counts:", err.message);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 });
 
-// 🔹 Get all reactions for a post
-app.get("/api/react/:postId", async (req, res) => {
-  try {
-    const { postId } = req.params;
-
-    const reactions = await interactDB.query(
-      "SELECT * FROM likes WHERE post_id=$1",
-      [postId]
-    );
-
-    res.json(reactions.rows);
-  } catch (err) {
-    console.error("Error fetching reactions:", err.message);
-    res.status(500).json({ message: "Server error", error: err.message });
-  }
-});
 
 // 🔹 Server check
 app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
