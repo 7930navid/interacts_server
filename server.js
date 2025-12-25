@@ -24,29 +24,35 @@ const interactDB = new Pool({
 // 🔹 Initialize tables
 async function initDB() {
   try {
+    // Likes table
+    await interactDB.query(`DROP TABLE IF EXISTS likes`);
     await interactDB.query(`
-DROP TABLE IF EXISTS likes;
-
-CREATE TABLE likes (
-    id SERIAL PRIMARY KEY,
-    post_id INT NOT NULL,
-    email TEXT NOT NULL,
-    reaction TEXT NOT NULL,
-    UNIQUE(post_id, email) 
-);
-      CREATE TABLE IF NOT EXISTS comments (
-        id SERIAL PRIMARY KEY,
-        post_id INT NOT NULL,
-        email TEXT NOT NULL,
-        comment TEXT NOT NULL,
-        created_at TIMESTAMP DEFAULT NOW()
-      );
+      CREATE TABLE likes (
+          id SERIAL PRIMARY KEY,
+          post_id INT NOT NULL,
+          email TEXT NOT NULL,
+          reaction TEXT NOT NULL,
+          UNIQUE(post_id, email)
+      )
     `);
+
+    // Comments table
+    await interactDB.query(`
+      CREATE TABLE IF NOT EXISTS comments (
+          id SERIAL PRIMARY KEY,
+          post_id INT NOT NULL,
+          email TEXT NOT NULL,
+          comment TEXT NOT NULL,
+          created_at TIMESTAMP DEFAULT NOW()
+      )
+    `);
+
     console.log("✅ Tables initialized successfully!");
   } catch (err) {
     console.error("❌ Error initializing tables:", err.message);
   }
 }
+
 
 // Call initDB
 initDB();
