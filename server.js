@@ -91,6 +91,45 @@ app.post("/react", async (req, res) => {
     }
 });
 
+// 🔹 Add Comment (with username + avatar)
+app.post("/comment", async (req, res) => {
+  try {
+    const { postId, email, username, avatar, comment } = req.body;
+
+    if (!postId || !email || !username || !comment) {
+      return res.status(400).json({
+        message: "postId, email, username and comment are required!"
+      });
+    }
+
+    const query = `
+      INSERT INTO comments (post_id, email, username, avatar, comment)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *;
+    `;
+
+    const result = await interactDB.query(query, [
+      postId,
+      email,
+      username,
+      avatar || "🙂",
+      comment
+    ]);
+
+    res.status(201).json({
+      message: "Comment added successfully ✅",
+      comment: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Error adding comment:", err.message);
+    res.status(500).json({
+      message: "Server error",
+      error: err.message
+    });
+  }
+});
+
 // 🔹 Get reaction + comment count for a post
 app.get("/QuanOfReact", async (req, res) => {
   try {
