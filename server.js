@@ -1,3 +1,4 @@
+// server.js
 const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
@@ -14,7 +15,7 @@ app.use(
   })
 );
 
-// 🔹 Interact-DB connection
+// 🔹 PostgreSQL connection
 const interactDB = new Pool({
   connectionString: process.env.INTERACT_DB_URL,
   ssl: { rejectUnauthorized: false },
@@ -28,7 +29,8 @@ async function initDB() {
         id SERIAL PRIMARY KEY,
         post_id INT NOT NULL,
         email TEXT NOT NULL,
-        reaction TEXT
+        reaction TEXT,
+        UNIQUE(post_id, email)
       );
 
       CREATE TABLE IF NOT EXISTS comments (
@@ -39,16 +41,16 @@ async function initDB() {
         created_at TIMESTAMP DEFAULT NOW()
       );
     `);
-    console.log("✅ interact table initialized successfully!");
+    console.log("✅ Tables initialized successfully!");
   } catch (err) {
-    console.error("❌ Error initializing table:", err.message);
+    console.error("❌ Error initializing tables:", err.message);
   }
 }
 
-// Call initDB once server starts
+// Call initDB
 initDB();
 
-// 🔹 Add Reaction / Like (PostgreSQL version)
+// 🔹 Add Reaction / Like
 app.post("/react", async (req, res) => {
     try {
         const { postId, email, reaction } = req.body;
@@ -57,7 +59,6 @@ app.post("/react", async (req, res) => {
             return res.status(400).json({ message: "Post ID, email and reaction are required!" });
         }
 
-        // Insert reaction, avoid duplicates
         const query = `
             INSERT INTO likes (post_id, email, reaction)
             VALUES ($1, $2, $3)
@@ -80,22 +81,18 @@ app.post("/react", async (req, res) => {
     }
 });
 
-// 🔹 Get reaction + comment quantity for a post
+// 🔹 Get reaction + comment count for a post
 app.get("/QuanOfReact", async (req, res) => {
   try {
     const { postId } = req.query;
 
-    if (!postId) {
-      return res.status(400).json({ message: "postId is required" });
-    }
+    if (!postId) return res.status(400).json({ message: "postId is required" });
 
-    // Count reactions
     const likeResult = await interactDB.query(
       "SELECT COUNT(*) AS likes FROM likes WHERE post_id=$1",
       [postId]
     );
 
-    // Count comments
     const commentResult = await interactDB.query(
       "SELECT COUNT(*) AS comments FROM comments WHERE post_id=$1",
       [postId]
@@ -132,6 +129,6 @@ app.get("/api/react/:postId", async (req, res) => {
 // 🔹 Server check
 app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
 
-// 🔹 Start Server
+// 🔹 Start server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
