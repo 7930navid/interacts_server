@@ -271,6 +271,38 @@ app.put("/comment/:email/:comId", async (req, res) => {
   }
 });
 
+// 🔹 Edit All Comments of a User (username & avatar)
+app.put("/editusercomments/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+    const { username, avatar } = req.body;
+
+    if (!username || !avatar) {
+      return res.status(400).json({ message: "Missing username or avatar" });
+    }
+
+    const result = await interactDB.query(
+      `UPDATE comments 
+       SET username = $1, avatar = $2 
+       WHERE email = $3
+       RETURNING *`,
+      [username, avatar, email]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: "No comments found for this user" });
+    }
+
+    res.status(200).json({
+      message: `All comments of ${email} updated`,
+      updatedComments: result.rows
+    });
+
+  } catch (err) {
+    console.error("Error updating comments:", err.message);
+    res.status(500).json({ message: "Failed to update comments", error: err.message });
+  }
+});
 
 // 🔹 Server check
 app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
