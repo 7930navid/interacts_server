@@ -165,6 +165,33 @@ app.get("/api/counts/:postId", async (req, res) => {
   }
 });
 
+// 🔹 Get all comments for a post
+app.get("/comments/:postId", async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    if (!postId) {
+      return res.status(400).json({ message: "postId is required" });
+    }
+
+    const result = await interactDB.query(
+      `SELECT id, username, avatar, comment, created_at
+       FROM comments
+       WHERE post_id = $1
+       ORDER BY created_at DESC`,
+      [postId]
+    );
+
+    res.status(200).json(result.rows);
+
+  } catch (err) {
+    console.error("Error fetching comments:", err.message);
+    res.status(500).json({
+      message: "Server error",
+      error: err.message
+    });
+  }
+});
 
 // 🔹 Server check
 app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
