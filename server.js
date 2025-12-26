@@ -308,39 +308,59 @@ app.put("/comment/:email/:comId", async (req, res) => {
   }
 });
 
-// 🔹 Edit All Comments of a User (username & avatar)
+// 🔹 Edit All Comments + Likes of a User (username & avatar)
 app.put("/editusercomments/:email", async (req, res) => {
   try {
     const { email } = req.params;
     const { username, avatar } = req.body;
 
     if (!username || !avatar) {
-      return res.status(400).json({ message: "Missing username or avatar" });
+      return res.status(400).json({
+        message: "Missing username or avatar"
+      });
     }
 
-    const result = await interactDB.query(
-      `UPDATE comments 
-       SET username = $1, avatar = $2 
+    // 🔹 1️⃣ Update COMMENTS
+    const commentsResult = await interactDB.query(
+      `UPDATE comments
+       SET username = $1, avatar = $2
        WHERE email = $3
-       RETURNING *`,
+       RETURNING id`,
       [username, avatar, email]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ message: "No comments found for this user" });
+    // 🔹 2️⃣ Update LIKES
+    const likesResult = await interactDB.query(
+      `UPDATE likes
+       SET username = $1, avatar = $2
+       WHERE email = $3
+       RETURNING id`,
+      [username, avatar, email]
+    );
+
+    if (
+      commentsResult.rowCount === 0 &&
+      likesResult.rowCount === 0
+    ) {
+      return res.status(404).json({
+        message: "No comments or likes found for this user"
+      });
     }
 
     res.status(200).json({
-      message: `All comments of ${email} updated`,
-      updatedComments: result.rows
+      message: "User comments & likes updated successfully ✅",
+      updatedComments: commentsResult.rowCount,
+      updatedLikes: likesResult.rowCount
     });
 
   } catch (err) {
-    console.error("Error updating comments:", err.message);
-    res.status(500).json({ message: "Failed to update comments", error: err.message });
+    console.error("Error updating user interactions:", err.message);
+    res.status(500).json({
+      message: "Failed to update user interactions",
+      error: err.message
+    });
   }
 });
-
 // 🔹 Delete All Interactions of a User (likes + comments)
 app.delete("/deleteuserinteracts/:email", async (req, res) => {
   try {
