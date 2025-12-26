@@ -304,6 +304,42 @@ app.put("/editusercomments/:email", async (req, res) => {
   }
 });
 
+// 🔹 Delete All Interactions of a User (likes + comments)
+app.delete("/deleteuserinteracts/:email", async (req, res) => {
+  try {
+    const { email } = req.params;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    // 🧹 Delete likes
+    const likesResult = await interactDB.query(
+      "DELETE FROM likes WHERE email = $1",
+      [email]
+    );
+
+    // 🧹 Delete comments
+    const commentsResult = await interactDB.query(
+      "DELETE FROM comments WHERE email = $1",
+      [email]
+    );
+
+    res.status(200).json({
+      message: "All user interactions deleted successfully ✅",
+      deletedLikes: likesResult.rowCount,
+      deletedComments: commentsResult.rowCount
+    });
+
+  } catch (err) {
+    console.error("Error deleting user interactions:", err.message);
+    res.status(500).json({
+      message: "Failed to delete user interactions",
+      error: err.message
+    });
+  }
+});
+
 // 🔹 Server check
 app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
 
