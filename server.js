@@ -22,6 +22,24 @@ const interactDB = new Pool({
   ssl: { rejectUnauthorized: false },
 });
 
+// 🔹 Keep-Alive ping for interactDB
+async function keepInteractDBAlive() {
+  try {
+    const res = await interactDB.query("SELECT 1"); // lightweight ping
+    console.log(`[${new Date().toISOString()}] interactDB ping success`, res.rows[0]);
+  } catch (err) {
+    console.error(`[${new Date().toISOString()}] interactDB ping failed:`, err.message);
+  }
+}
+
+// 🔹 Ping interval (6 hours recommended)
+const PING_INTERVAL = 1000 * 60 * 60 * 6; // 6 hours
+setInterval(keepInteractDBAlive, PING_INTERVAL);
+
+// initial ping immediately on server start
+keepInteractDBAlive();
+
+
 async function initDB() {
   try {
 
