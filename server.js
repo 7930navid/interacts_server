@@ -65,36 +65,54 @@ initDB().catch(err => {
 });
 
 
-// 🔹 Add Reaction / Like
+// 🔹 Add Reaction / Like (with username + avatar)
 app.post("/react", async (req, res) => {
-    try {
-        const { postId, email, reaction } = req.body;
+  try {
+    const { postId, email, username, avatar, reaction } = req.body;
 
-        if (!postId || !email || !reaction) {
-            return res.status(400).json({ message: "Post ID, email and reaction are required!" });
-        }
-
-        const query = `
-            INSERT INTO likes (post_id, email, reaction)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (post_id, email)
-            DO NOTHING
-            RETURNING *;
-        `;
-
-        const result = await interactDB.query(query, [postId, email, reaction]);
-
-        if (result.rows.length === 0) {
-            return res.status(400).json({ message: "You have already reacted to this post!" });
-        }
-
-        res.status(200).json({ message: "Reaction added successfully!" });
-
-    } catch (err) {
-        console.error("Server error:", err.message);
-        res.status(500).json({ message: "Server error", error: err.message });
+    if (!postId || !email || !username || !reaction) {
+      return res.status(400).json({
+        message: "postId, email, username and reaction are required!"
+      });
     }
+
+    const query = `
+      INSERT INTO likes (post_id, email, username, avatar, reaction)
+      VALUES ($1, $2, $3, $4, $5)
+      ON CONFLICT (post_id, email)
+      DO NOTHING
+      RETURNING *;
+    `;
+
+    const result = await interactDB.query(query, [
+      postId,
+      email,
+      username,
+      avatar || "🙂",
+      reaction
+    ]);
+
+    if (result.rowCount === 0) {
+      return res.status(400).json({
+        message: "You have already reacted to this post!"
+      });
+    }
+
+    res.status(200).json({
+      message: "Reaction added successfully!",
+      reaction: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Server error:", err.message);
+    res.status(500).json({
+      message: "Server error",
+      error: err.message
+    });
+  }
 });
+
+
 
 // 🔹 Add Comment (with username + avatar)
 app.post("/comment", async (req, res) => {
