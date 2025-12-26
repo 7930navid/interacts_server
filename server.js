@@ -340,6 +340,37 @@ app.delete("/deleteuserinteracts/:email", async (req, res) => {
   }
 });
 
+// 🔹 Get all likes of a post
+app.get("/likes/:postId", async (req, res) => {
+  try {
+    const { postId } = req.params;
+
+    if (!postId) {
+      return res.status(400).json({ message: "postId is required" });
+    }
+
+    const result = await interactDB.query(
+      `SELECT email, reaction 
+       FROM likes 
+       WHERE post_id = $1`,
+      [postId]
+    );
+
+    res.status(200).json({
+      count: result.rowCount,
+      likes: result.rows
+    });
+
+  } catch (err) {
+    console.error("Error fetching likes:", err.message);
+    res.status(500).json({
+      message: "Server error",
+      error: err.message
+    });
+  }
+});
+
+
 // 🔹 Server check
 app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
 
