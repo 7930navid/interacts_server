@@ -25,17 +25,18 @@ const interactDB = new Pool({
 async function initDB() {
   try {
 
-    // Create likes table
-    await interactDB.query(`
-      CREATE TABLE IF NOT EXISTS likes (
-        id SERIAL PRIMARY KEY,
-        post_id INT NOT NULL,
-        email TEXT NOT NULL,
-        reaction TEXT NOT NULL,
-        UNIQUE(post_id, email)
-      )
-    `);
-
+// Create likes table with avatar + username
+await interactDB.query(`
+  CREATE TABLE IF NOT EXISTS likes (
+    id SERIAL PRIMARY KEY,
+    post_id INT NOT NULL,
+    email TEXT NOT NULL,
+    username TEXT NOT NULL,
+    avatar TEXT,
+    reaction TEXT NOT NULL,
+    UNIQUE(post_id, email)
+  )
+`);
     // Create comments table
     await interactDB.query(`
       CREATE TABLE IF NOT EXISTS comments (
@@ -350,7 +351,7 @@ app.get("/likes/:postId", async (req, res) => {
     }
 
     const result = await interactDB.query(
-      `SELECT email, reaction 
+      `SELECT email, reaction, username, avatar
        FROM likes 
        WHERE post_id = $1`,
       [postId]
