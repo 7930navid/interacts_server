@@ -47,7 +47,7 @@ async function initDB() {
 await interactDB.query(`
   CREATE TABLE IF NOT EXISTS likes (
     id SERIAL PRIMARY KEY,
-    post_id INT NOT NULL,
+    post_id TEXT NOT NULL,
     email TEXT NOT NULL,
     username TEXT NOT NULL,
     avatar TEXT,
@@ -59,7 +59,7 @@ await interactDB.query(`
     await interactDB.query(`
       CREATE TABLE IF NOT EXISTS comments (
         id SERIAL PRIMARY KEY,
-        post_id INT NOT NULL,
+        post_id TEXT NOT NULL,
         email TEXT NOT NULL,
         username TEXT NOT NULL,
         avatar TEXT,
