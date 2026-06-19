@@ -428,8 +428,12 @@ app.get("/likes/:postId", async (req, res) => {
 });
 
 
-// 🔹 Server check
-app.get("/", (req, res) => res.json({ message: "Backend is working ✅" }));
+/* ============ FETCH ==============*/
+app.get("/get/:name", (req,res) => {
+    const name = req.params.name;
+    const message = `${name} server has been pinged`;
+    res.send(message);
+});
 
 // 🔹 Start server
 const PORT = process.env.PORT || 5000;
