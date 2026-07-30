@@ -93,7 +93,8 @@ app.put("/changeAllProf", async (req, res) => {
   try {
     const { email, username, bio, avatar, cover_photo } = req.body; 
 
-    const postUpdateResult = await pool.query(
+    // এখানে pool এর বদলে interactDB ব্যবহার করা হলো (আপনার সার্ভারের ডাটাবেজ ইন্সট্যান্স অনুযায়ী)
+    const postUpdateResult = await interactDB.query(
       `
       UPDATE likes
       SET username = $1, avatar = $2
@@ -103,7 +104,7 @@ app.put("/changeAllProf", async (req, res) => {
       [username, avatar, email]
     );
 
-    const vibeUpdateResult = await pool.query(
+    const vibeUpdateResult = await interactDB.query(
       `
       UPDATE comments
       SET username = $1, avatar = $2
@@ -124,8 +125,7 @@ app.put("/changeAllProf", async (req, res) => {
     console.error("Error updating profile in target server:", err);
     res.status(500).json({ message: "Server error while updating profile data" });
   }
-  
-  });
+});
 
 
 
