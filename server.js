@@ -83,6 +83,52 @@ initDB().catch(err => {
 });
 
 
+
+
+
+/* =========================
+   CHANGE ALL PROFILE INFO (Posts/Interacts/Story/Connection Server)
+========================= */
+app.put("/changeAllProf", async (req, res) => {
+  try {
+    const { email, username, bio, avatar, cover_photo } = req.body; 
+
+    const postUpdateResult = await pool.query(
+      `
+      UPDATE likes
+      SET username = $1, avatar = $2
+      WHERE email = $3
+      RETURNING *
+      `,
+      [username, avatar, email]
+    );
+
+    const vibeUpdateResult = await pool.query(
+      `
+      UPDATE comments
+      SET username = $1, avatar = $2
+      WHERE email = $3
+      RETURNING *
+      `,
+      [username, avatar, email]
+    );
+
+    res.json({
+      success: true,
+      message: "Profile info updated successfully across both tables in this server",
+      updatedPostsCount: postUpdateResult.rowCount,
+      updatedVibeCount: vibeUpdateResult.rowCount
+    });
+
+  } catch (err) {
+    console.error("Error updating profile in target server:", err);
+    res.status(500).json({ message: "Server error while updating profile data" });
+  }
+  
+  });
+
+
+
 // 🔹 Add Reaction / Like (with username + avatar)
 app.post("/react", async (req, res) => {
   try {
